@@ -18,7 +18,7 @@ import pynvml
 import platform
 
 # 履歴サイズ（秒数）
-HISTORY_SIZE = 100
+HISTORY_SIZE = 200
 
 # グラフ用文字
 GRAPH_BARS = "▒"
@@ -120,7 +120,7 @@ def get_memory_usage():
     available_gb = memory.available / (1024 ** 3)
     used_gb = memory.used / (1024 ** 3)
 
-    info = f"""DDR5 64GB
+    info = f"""
        総量：{total_gb:.1f} GB
        使用中：{used_gb:.1f} GB ({percent:.1f}%)
        空き：{available_gb:.1f} GB ({100 - percent:.1f}%)
@@ -185,7 +185,6 @@ def get_gpu_memory_usage():
             if percent > max_percent:
                 max_percent = percent
             gpu_info = f"""
-           GPU {i}: {name}
            総量：{total_gb:.2f} GB
            使用中：{used_gb:.2f} GB ({percent:.1f}%)
            空き：{free_gb:.2f} GB({100 - percent:.1f}%)
@@ -224,8 +223,14 @@ def create_layout():
     return layout
 
 
-def update_layout(layout, history):
+def update_layout(layout, history, console=None):
     """レイアウトを更新"""
+    if console is None:
+        console = Console()
+    
+    # コンソール幅から動的に計算（2 列分割・ボーダー・ラベルを考慮）
+    graph_width = max(10, (console.width // 2) - 10)
+
     # CPU 取得と履歴追加
     cpu_val, cpu_info = get_cpu_usage()
     history['cpu'].append(cpu_val)
@@ -242,11 +247,11 @@ def update_layout(layout, history):
     gpu_mem_val, gpu_mem_info = get_gpu_memory_usage()
     history['gpu_memory'].append(gpu_mem_val)
 
-    # グラフ描画（コンソール幅に合わせて最大 50 文字）
-    cpu_graph = draw_graph(history['cpu'], width=50)
-    mem_graph = draw_graph(history['memory'], width=50)
-    gpu_graph = draw_graph(history['gpu'], width=50)
-    gpu_mem_graph = draw_graph(history['gpu_memory'], width=50)
+    # グラフ描画（動的に計算した幅を使用）
+    cpu_graph = draw_graph(history['cpu'], width=graph_width)
+    mem_graph = draw_graph(history['memory'], width=graph_width)
+    gpu_graph = draw_graph(history['gpu'], width=graph_width)
+    gpu_mem_graph = draw_graph(history['gpu_memory'], width=graph_width)
 
     # 左上：CPU 使用率
     cpu_panel = Panel(
@@ -285,12 +290,12 @@ def main():
     history = init_history()
 
     # 初期更新
-    update_layout(layout, history)
+    update_layout(layout, history, console)
 
     with Live(layout, console=console, refresh_per_second=2):
         while True:
             time.sleep(0.5)
-            update_layout(layout, history)
+            update_layout(layout, history, console)
 
 
 if __name__ == "__main__":
