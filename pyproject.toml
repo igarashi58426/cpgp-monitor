@@ -1,0 +1,13 @@
+[project]
+name = "system-monitor"
+version = "0.1.0"
+description = "システムモニター TUI ツール - 4 画面分割で CPU、メモリ、GPU、GPU メモリ使用率を表示"
+requires-python = ">=3.8"
+dependencies = [
+    "psutil>=7.2.2",
+    "rich>=15.0.0",
+    "pynvml>=13.0.1",
+]
+
+[project.scripts]
+system-monitor = "system_monitor:main"

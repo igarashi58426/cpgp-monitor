@@ -1,0 +1,8 @@
+pyproject.toml
+system_monitor.py
+system_monitor.egg-info/PKG-INFO
+system_monitor.egg-info/SOURCES.txt
+system_monitor.egg-info/dependency_links.txt
+system_monitor.egg-info/entry_points.txt
+system_monitor.egg-info/requires.txt
+system_monitor.egg-info/top_level.txt
