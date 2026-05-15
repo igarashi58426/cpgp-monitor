@@ -121,9 +121,8 @@ def get_memory_usage():
     used_gb = memory.used / (1024 ** 3)
 
     info = f"""
-       総量：{total_gb:.1f} GB
-       使用中：{used_gb:.1f} GB ({percent:.1f}%)
-       空き：{available_gb:.1f} GB ({100 - percent:.1f}%)
+       使用中：{used_gb:.1f} GB / {total_gb:.1f} GB ({percent:.1f}%)
+       空き：{available_gb:.1f} GB / {total_gb:.1f} GB ({100 - percent:.1f}%)
 """
     return percent, info
 
@@ -143,12 +142,13 @@ def get_gpu_usage():
             handle = pynvml.nvmlDeviceGetHandleByIndex(i)
             name = str(pynvml.nvmlDeviceGetName(handle))
             utilization = pynvml.nvmlDeviceGetUtilizationRates(handle)
+            temp = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
 
             if utilization.gpu > max_util:
                 max_util = utilization.gpu
 
             gpu_info.append(f"  GPU {i}: {name}")
-            gpu_info.append(f"    使用率：{utilization.gpu:.1f}%")
+            gpu_info.append(f"    使用率：{utilization.gpu:.1f}% 温度：{temp}°C")
 
         return max_util, "\n".join(gpu_info)
 
@@ -185,10 +185,8 @@ def get_gpu_memory_usage():
             if percent > max_percent:
                 max_percent = percent
             gpu_info = f"""
-           総量：{total_gb:.2f} GB
-           使用中：{used_gb:.2f} GB ({percent:.1f}%)
-           空き：{free_gb:.2f} GB({100 - percent:.1f}%)
-"""
+           使用中：{used_gb:.2f} GB / {total_gb:.2f} GB ({percent:.1f}%)
+           空き：{free_gb:.2f} GB/ {total_gb:.2f} GB ({100 - percent:.1f}%)"""
 
         return max_percent, gpu_info
 
@@ -227,7 +225,7 @@ def update_layout(layout, history, console=None):
     """レイアウトを更新"""
     if console is None:
         console = Console()
-    
+
     # コンソール幅から動的に計算（2 列分割・ボーダー・ラベルを考慮）
     graph_width = max(10, (console.width // 2) - 10)
 
