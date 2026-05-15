@@ -15,10 +15,29 @@ import psutil
 import pynvml
 
 
+def get_cpu_name():
+    """CPU 名を取得"""
+    try:
+        with open('/proc/cpuinfo', 'r') as f:
+            for line in f:
+                if line.startswith('model name'):
+                    return line.split(':')[1].strip()
+    except Exception:
+        pass
+    return "Unknown CPU"
+
+
 def get_cpu_usage():
     """CPU 使用率を取得"""
     cpu_percent = psutil.cpu_percent(interval=None)
-    return f"{cpu_percent:.1f}%"
+    cpu_freq = psutil.cpu_freq()
+    physical_count = psutil.cpu_count(logical=False)
+    logical_count = psutil.cpu_count()
+    
+    return f"""{get_cpu_name()}
+  使用率：{cpu_percent:.1f}%
+  周波数：{cpu_freq.current/1000:.2f} MHz
+  コア数：物理 {physical_count}, 論理 {logical_count}"""
 
 
 def get_memory_usage():
@@ -53,8 +72,8 @@ def get_gpu_usage():
             utilization = pynvml.nvmlDeviceGetUtilizationRates(handle)
             
             gpu_info.append(f"  GPU {i}: {name}")
-            gpu_info.append(f"    グラフィックス：{utilization.gpu:.1f}%")
-            gpu_info.append(f"    メモリ：{utilization.memory:.1f}%")
+            gpu_info.append(f"    グラフィックス：{utilization.gpu:.1f} %")
+            gpu_info.append(f"    メモリ：{utilization.memory:.1f} %")
         
         return "\n".join(gpu_info)
     
@@ -89,7 +108,7 @@ def get_gpu_memory_usage():
             
             gpu_info.append(f"  GPU {i}: {name}")
             gpu_info.append(f"    総量：{total_gb:.2f} GB")
-            gpu_info.append(f"    使用中：{used_gb:.2f} GB ({percent:.1f}%)")
+            gpu_info.append(f"    使用中：{used_gb:.2f} GB ({percent:.1f} %) ")
             gpu_info.append(f"    空き：{free_gb:.2f} GB")
         
         return "\n".join(gpu_info)
