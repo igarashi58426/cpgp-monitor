@@ -7,6 +7,7 @@
 """
 
 import time
+import sys
 from collections import deque
 from rich.console import Console
 from rich.layout import Layout
@@ -290,14 +291,17 @@ def main():
     # 初期更新
     update_layout(layout, history, console)
 
-    with Live(layout, console=console, refresh_per_second=2):
-        while True:
-            time.sleep(0.5)
-            update_layout(layout, history, console)
+    try:
+        with Live(layout, console=console, refresh_per_second=2):
+            while True:
+                time.sleep(0.5)
+                update_layout(layout, history, console)
+    except KeyboardInterrupt:
+        pass
 
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\nモニターを停止しました")
+        pass
