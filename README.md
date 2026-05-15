@@ -13,19 +13,14 @@
 ## インストール
 
 ### uv を使用してインストール（推奨）
-
+ツールとしてインストール
 ```bash
-# ツールとしてインストール
-uv tool install . --force
+uv tool install .
 ```
-
-### 依存パッケージ
-
-以下のパッケージが必要です：
-
-- `psutil` - システム情報取得用
-- `rich` - TUI レンダリング用
-- `pynvml` / `nvidia-ml-py` - GPU 監視用（NVIDIA GPU の場合）
+更新
+```bash
+uv tool install . --force --reinstall
+```
 
 ## 使用方法
 
@@ -46,6 +41,14 @@ system-monitor
 ```bash
 uv run python system_monitor.py
 ```
+
+### 依存パッケージ
+
+以下のパッケージが必要です：
+
+- `psutil` - システム情報取得用
+- `rich` - TUI レンダリング用
+- `pynvml` / `nvidia-ml-py` - GPU 監視用（NVIDIA GPU の場合）
 
 ## 要件
 
