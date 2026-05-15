@@ -2,7 +2,7 @@
 """
 システムモニター TUI ツール
 4 画面分割で CPU、メモリ、GPU、GPU メモリ使用率を表示
-時系列グラフ付き（過去60秒）
+時系列グラフ付き（過去90秒）
 0.5 秒ごとに更新
 """
 
@@ -19,7 +19,7 @@ import pynvml
 import platform
 
 # 履歴サイズ（秒数）
-HISTORY_SIZE = 200
+HISTORY_SIZE = 180 # データポイント（約90秒分更新）
 
 # グラフ用文字
 GRAPH_BARS = "▒"
