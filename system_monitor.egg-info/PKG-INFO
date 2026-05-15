@@ -1,8 +1,0 @@
-Metadata-Version: 2.4
-Name: system-monitor
-Version: 0.1.0
-Summary: システムモニター TUI ツール - 4 画面分割で CPU、メモリ、GPU、GPU メモリ使用率を表示
-Requires-Python: >=3.8
-Requires-Dist: psutil>=7.2.2
-Requires-Dist: rich>=15.0.0
-Requires-Dist: pynvml>=13.0.1

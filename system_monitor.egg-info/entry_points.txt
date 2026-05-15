@@ -1,2 +1,0 @@
-[console_scripts]
-system-monitor = system_monitor:main
