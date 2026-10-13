@@ -148,25 +148,13 @@ def _get_nvidia_gpu_usage():
     """NVIDIA GPU 使用率（NVML）"""
     pynvml.nvmlInit()
     try:
-        device_count = pynvml.nvmlDeviceGetCount()
-        if device_count == 0:
-            return 0, "GPU デバイスが見つかりません"
+        handle = pynvml.nvmlDeviceGetHandleByIndex(0)
+        name = str(pynvml.nvmlDeviceGetName(handle))
+        utilization = pynvml.nvmlDeviceGetUtilizationRates(handle)
+        temp = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
 
-        gpu_info = []
-        max_util = 0
-        for i in range(device_count):
-            handle = pynvml.nvmlDeviceGetHandleByIndex(i)
-            name = str(pynvml.nvmlDeviceGetName(handle))
-            utilization = pynvml.nvmlDeviceGetUtilizationRates(handle)
-            temp = pynvml.nvmlDeviceGetTemperature(handle, pynvml.NVML_TEMPERATURE_GPU)
-
-            if utilization.gpu > max_util:
-                max_util = utilization.gpu
-
-            gpu_info.append(f"  GPU {i}: {name}")
-            gpu_info.append(f"    使用率：{utilization.gpu:.1f}% 温度：{temp}°C")
-
-        return max_util, "\n".join(gpu_info)
+        gpu_info = f"  GPU: {name}\n    使用率：{utilization.gpu:.1f}% 温度：{temp}°C"
+        return utilization.gpu, gpu_info
     finally:
         try:
             pynvml.nvmlShutdown()
@@ -180,14 +168,9 @@ def _get_windows_gpu_usage():
     if not gpus:
         return 0, "GPU 情報を取得できません"
 
-    gpu_info = []
-    max_util = 0
-    for i, (name, util, _used, _total) in enumerate(gpus):
-        if util > max_util:
-            max_util = util
-        gpu_info.append(f"  GPU {i}: {name}")
-        gpu_info.append(f"    使用率：{util:.1f}%")
-    return max_util, "\n".join(gpu_info)
+    name, util, _used, _total = gpus[0]
+    gpu_info = f"  GPU: {name}\n    使用率：{util:.1f}%"
+    return util, gpu_info
 
 
 def get_gpu_memory_usage():
@@ -204,29 +187,19 @@ def _get_nvidia_gpu_memory_usage():
     """NVIDIA GPU メモリ（NVML）"""
     pynvml.nvmlInit()
     try:
-        device_count = pynvml.nvmlDeviceGetCount()
-        if device_count == 0:
-            return 0, "GPU デバイスが見つかりません"
+        handle = pynvml.nvmlDeviceGetHandleByIndex(0)
 
-        gpu_info = []
-        max_percent = 0
-        for i in range(device_count):
-            handle = pynvml.nvmlDeviceGetHandleByIndex(i)
-            name = str(pynvml.nvmlDeviceGetName(handle))
+        memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+        total_gb = memory_info.total / (1024 ** 3)
+        used_gb = memory_info.used / (1024 ** 3)
+        free_gb = memory_info.free / (1024 ** 3)
+        percent = (memory_info.used / memory_info.total) * 100
 
-            memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-            total_gb = memory_info.total / (1024 ** 3)
-            used_gb = memory_info.used / (1024 ** 3)
-            free_gb = memory_info.free / (1024 ** 3)
-            percent = (memory_info.used / memory_info.total) * 100
-
-            if percent > max_percent:
-                max_percent = percent
-            gpu_info = f"""
+        gpu_info = f"""
            使用中：{used_gb:.2f} GB / {total_gb:.2f} GB ({percent:.1f}%)
            空き：{free_gb:.2f} GB/ {total_gb:.2f} GB ({100 - percent:.1f}%)"""
 
-        return max_percent, gpu_info
+        return percent, gpu_info
     finally:
         try:
             pynvml.nvmlShutdown()
@@ -240,24 +213,17 @@ def _get_windows_gpu_memory_usage():
     if not gpus:
         return 0, "GPU メモリ情報を取得できません"
 
-    gpu_info = []
-    max_percent = 0
-    for _i, (_name, _util, used, total) in enumerate(gpus):
-        if total <= 0:
-            continue
-        percent = (used / total) * 100
-        if percent > max_percent:
-            max_percent = percent
-        total_gb = total / (1024 ** 3)
-        used_gb = used / (1024 ** 3)
-        free_gb = max(0.0, total_gb - used_gb)
-        gpu_info.append(f"""
-           使用中：{used_gb:.2f} GB / {total_gb:.2f} GB ({percent:.1f}%)
-           空き：{free_gb:.2f} GB/ {total_gb:.2f} GB ({100 - percent:.1f}%)""")
-
-    if not gpu_info:
+    _name, _util, used, total = gpus[0]
+    if total <= 0:
         return 0, "GPU メモリ情報を取得できません"
-    return max_percent, "\n".join(gpu_info)
+    percent = (used / total) * 100
+    total_gb = total / (1024 ** 3)
+    used_gb = used / (1024 ** 3)
+    free_gb = max(0.0, total_gb - used_gb)
+    gpu_info = f"""
+       使用中：{used_gb:.2f} GB / {total_gb:.2f} GB ({percent:.1f}%)
+       空き：{free_gb:.2f} GB/ {total_gb:.2f} GB ({100 - percent:.1f}%)"""
+    return percent, gpu_info
 
 
 def create_layout():
