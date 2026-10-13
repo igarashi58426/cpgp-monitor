@@ -15,8 +15,14 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.live import Live
 import psutil
-import pynvml
 import platform
+
+try:
+    import pynvml
+except (ImportError, OSError):
+    pynvml = None
+
+from gpu_windows import get_monitor as _get_windows_gpu_monitor
 
 # 履歴サイズ（秒数）
 HISTORY_SIZE = 180 # データポイント（約90秒分更新）
@@ -130,10 +136,19 @@ def get_memory_usage():
 
 def get_gpu_usage():
     """GPU 使用率を取得（最大GPUの百分率と情報を返す）"""
-    try:
-        pynvml.nvmlInit()
-        device_count = pynvml.nvmlDeviceGetCount()
+    if pynvml is not None:
+        try:
+            return _get_nvidia_gpu_usage()
+        except pynvml.NVMLError:
+            pass
+    return _get_windows_gpu_usage()
 
+
+def _get_nvidia_gpu_usage():
+    """NVIDIA GPU 使用率（NVML）"""
+    pynvml.nvmlInit()
+    try:
+        device_count = pynvml.nvmlDeviceGetCount()
         if device_count == 0:
             return 0, "GPU デバイスが見つかりません"
 
@@ -152,9 +167,6 @@ def get_gpu_usage():
             gpu_info.append(f"    使用率：{utilization.gpu:.1f}% 温度：{temp}°C")
 
         return max_util, "\n".join(gpu_info)
-
-    except pynvml.NVMLError:
-        return 0, "GPU 情報を取得できません (NVIDIA GPU が必要)"
     finally:
         try:
             pynvml.nvmlShutdown()
@@ -162,12 +174,37 @@ def get_gpu_usage():
             pass
 
 
+def _get_windows_gpu_usage():
+    """Windows パフォーマンスカウンタ経由の GPU 使用率（AMD / Intel / NVIDIA 共通）"""
+    gpus = _get_windows_gpu_monitor().snapshot()
+    if not gpus:
+        return 0, "GPU 情報を取得できません"
+
+    gpu_info = []
+    max_util = 0
+    for i, (name, util, _used, _total) in enumerate(gpus):
+        if util > max_util:
+            max_util = util
+        gpu_info.append(f"  GPU {i}: {name}")
+        gpu_info.append(f"    使用率：{util:.1f}%")
+    return max_util, "\n".join(gpu_info)
+
+
 def get_gpu_memory_usage():
     """GPU メモリ使用率を取得（最大GPUの百分率と情報を返す）"""
-    try:
-        pynvml.nvmlInit()
-        device_count = pynvml.nvmlDeviceGetCount()
+    if pynvml is not None:
+        try:
+            return _get_nvidia_gpu_memory_usage()
+        except pynvml.NVMLError:
+            pass
+    return _get_windows_gpu_memory_usage()
 
+
+def _get_nvidia_gpu_memory_usage():
+    """NVIDIA GPU メモリ（NVML）"""
+    pynvml.nvmlInit()
+    try:
+        device_count = pynvml.nvmlDeviceGetCount()
         if device_count == 0:
             return 0, "GPU デバイスが見つかりません"
 
@@ -190,14 +227,37 @@ def get_gpu_memory_usage():
            空き：{free_gb:.2f} GB/ {total_gb:.2f} GB ({100 - percent:.1f}%)"""
 
         return max_percent, gpu_info
-
-    except pynvml.NVMLError:
-        return 0, "GPU メモリ情報を取得できません (NVIDIA GPU が必要)"
     finally:
         try:
             pynvml.nvmlShutdown()
         except Exception:
             pass
+
+
+def _get_windows_gpu_memory_usage():
+    """Windows パフォーマンスカウンタ経由の GPU メモリ（AMD / Intel / NVIDIA 共通）"""
+    gpus = _get_windows_gpu_monitor().snapshot()
+    if not gpus:
+        return 0, "GPU メモリ情報を取得できません"
+
+    gpu_info = []
+    max_percent = 0
+    for _i, (_name, _util, used, total) in enumerate(gpus):
+        if total <= 0:
+            continue
+        percent = (used / total) * 100
+        if percent > max_percent:
+            max_percent = percent
+        total_gb = total / (1024 ** 3)
+        used_gb = used / (1024 ** 3)
+        free_gb = max(0.0, total_gb - used_gb)
+        gpu_info.append(f"""
+           使用中：{used_gb:.2f} GB / {total_gb:.2f} GB ({percent:.1f}%)
+           空き：{free_gb:.2f} GB/ {total_gb:.2f} GB ({100 - percent:.1f}%)""")
+
+    if not gpu_info:
+        return 0, "GPU メモリ情報を取得できません"
+    return max_percent, "\n".join(gpu_info)
 
 
 def create_layout():
