@@ -243,7 +243,7 @@ def _get_nvidia_gpu_memory_usage():
 
         gpu_info = f"""
            使用中：{used_gb:.2f} GB / {total_gb:.2f} GB ({percent:.1f}%)
-           空き：{free_gb:.2f} GB/ {total_gb:.2f} GB ({100 - percent:.1f}%)"""
+           空き：{free_gb:.2f} GB / {total_gb:.2f} GB ({100 - percent:.1f}%)"""
 
         return percent, gpu_info
     finally:
@@ -268,7 +268,7 @@ def _get_windows_gpu_memory_usage():
     free_gb = max(0.0, total_gb - used_gb)
     gpu_info = f"""
        使用中：{used_gb:.2f} GB / {total_gb:.2f} GB ({percent:.1f}%)
-       空き：{free_gb:.2f} GB/ {total_gb:.2f} GB ({100 - percent:.1f}%)"""
+       空き：{free_gb:.2f} GB / {total_gb:.2f} GB ({100 - percent:.1f}%)"""
     return percent, gpu_info
 
 
@@ -292,6 +292,13 @@ def create_layout():
     )
 
     return layout
+
+
+def _align_info(label, info):
+    """ラベルの直後に 1 行目を置き、2 行目以降をラベル幅に合わせてインデントする"""
+    lines = [line.strip() for line in info.strip().splitlines()]
+    pad = " " * _display_width(label + " ")
+    return "\n".join([lines[0]] + [pad + line for line in lines[1:]])
 
 
 def update_layout(layout, history, console=None):
@@ -326,7 +333,7 @@ def update_layout(layout, history, console=None):
 
     # 左上：CPU 使用率
     cpu_panel = Panel(
-        f"[bold cyan]CPU[/bold cyan] {cpu_info.strip()}\n[green]{cpu_graph}[/green]",
+        f"[bold cyan]CPU[/bold cyan] {_align_info('CPU', cpu_info)}\n[green]{cpu_graph}[/green]",
         title="[bold]システムモニター[/bold]",
         border_style="green"
     )
@@ -334,21 +341,21 @@ def update_layout(layout, history, console=None):
 
     # 右上：メモリ使用率
     memory_panel = Panel(
-        f"[bold magenta]RAM[/bold magenta] {mem_info.strip()}\n[green]{mem_graph}[/green]",
+        f"[bold magenta]RAM[/bold magenta] {_align_info('RAM', mem_info)}\n[green]{mem_graph}[/green]",
         border_style="yellow"
     )
     layout["right"].update(memory_panel)
 
     # 左下：GPU 使用率
     gpu_panel = Panel(
-        f"[bold green]GPU[/bold green] {gpu_info.strip()}\n[green]{gpu_graph}[/green]",
+        f"[bold green]GPU[/bold green] {_align_info('GPU', gpu_info)}\n[green]{gpu_graph}[/green]",
         border_style="cyan"
     )
     layout["bottom_left"].update(gpu_panel)
 
     # 右下：GPU メモリ使用率
     gpu_mem_panel = Panel(
-        f"[bold blue]VRAM[/bold blue] {gpu_mem_info.strip()}\n[green]{gpu_mem_graph}[/green]",
+        f"[bold blue]VRAM[/bold blue] {_align_info('VRAM', gpu_mem_info)}\n[green]{gpu_mem_graph}[/green]",
         border_style="magenta"
     )
     layout["bottom_right"].update(gpu_mem_panel)
