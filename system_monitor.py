@@ -127,11 +127,40 @@ def _get_cpu_name():
     return platform.processor()
 
 
+def _display_width(text):
+    """文字列の表示幅を計算（全角=2、半角=1）"""
+    import unicodedata
+
+    return sum(
+        2 if unicodedata.east_asian_width(c) in ("W", "F") else 1 for c in text
+    )
+
+
+def _truncate_width(text, max_width):
+    """表示幅 max_width 以内に文字列を切り詰める（超過時は … を付ける）"""
+    import unicodedata
+
+    width = 0
+    for i, c in enumerate(text):
+        w = 2 if unicodedata.east_asian_width(c) in ("W", "F") else 1
+        if width + w > max_width - 1:  # … の分を残す
+            return text[:i] + "…"
+        width += w
+    return text
+
+
 def get_cpu_usage():
     """CPU 使用率を取得（値と文字列を返す）"""
     cpu_percent = psutil.cpu_percent(interval=None)
+    # メモリ情報の最大表示幅に合わせて CPU 名を切り詰める（折り返し防止）
+    _, mem_info = get_memory_usage()
+    mem_width = max(
+        _display_width(line.strip()) for line in mem_info.strip().splitlines()
+    )
+    prefix_width = _display_width("CPU: ")
+    name = _truncate_width(_get_cpu_name(), mem_width - prefix_width)
     info = f"""
-    CPU: {_get_cpu_name()}
+    CPU: {name}
     使用率：{cpu_percent:.1f}%"""
     return cpu_percent, info
 
