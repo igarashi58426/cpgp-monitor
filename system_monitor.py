@@ -110,11 +110,28 @@ def draw_graph(history, width=50):
     return result
 
 
+def _get_cpu_name():
+    """CPU 名を取得（Windows はレジストリ、その他は platform.processor()）"""
+    if platform.system() == "Windows":
+        try:
+            import winreg
+
+            with winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE,
+                r"HARDWARE\DESCRIPTION\System\CentralProcessor\0",
+            ) as k:
+                name, _ = winreg.QueryValueEx(k, "ProcessorNameString")
+                return name.strip()
+        except OSError:
+            pass
+    return platform.processor()
+
+
 def get_cpu_usage():
     """CPU 使用率を取得（値と文字列を返す）"""
     cpu_percent = psutil.cpu_percent(interval=None)
     info = f"""
-    CPU: {platform.processor()}
+    CPU: {_get_cpu_name()}
     使用率：{cpu_percent:.1f}%"""
     return cpu_percent, info
 
