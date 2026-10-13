@@ -6,8 +6,8 @@
 
 - **左上**: CPU 使用率（パーセント表示）
 - **右上**: メモリ使用率（総量・使用中・空き容量）
-- **左下**: GPU 使用率（各 GPU のグラフィックス・メモリ使用率）
-- **右下**: GPU メモリ使用率（各 GPU の詳細情報）
+- **左下**: GPU 使用率（メイン GPU のグラフィックス・メモリ使用率。メイン GPU はディスプレイに接続されている GPU）
+- **右下**: GPU メモリ使用率（メイン GPU の VRAM 使用量）
 - **更新間隔**: 0.5 秒ごと
 
 ## インストール
@@ -57,7 +57,9 @@ uv run python system_monitor.py
 
 ## GPU 監視の仕組み
 
-- **GPU 名・LUID の特定**: `EnumDisplayDevicesW` + `D3DKMTOpenAdapterFromHdc` でディスプレイに接続されている GPU の LUID と名前を特定
+監視対象は **メイン GPU 1 台のみ**（ディスプレイに接続されている GPU）。ディスプレイ未接続の GPU（内蔵 GPU のみ有効な場合や、使用していない 2 枚目の GPU など）は表示しない。
+
+- **メイン GPU の判定**: `EnumDisplayDevicesW` でアクティブなディスプレイを列挙し、`D3DKMTOpenAdapterFromHdc` でそのディスプレイに接続されている GPU の LUID を特定
 - **NVIDIA GPU**: NVML（pynvml）。使用率・温度・メモリを取得
 - **その他の GPU（AMD Radeon など）**: NVML が使えない場合、Windows の GPU パフォーマンスカウンタ (PDH) にフォールバック。使用率・VRAM 使用量を取得（温度は非対応）。カウンタの LUID がメイン GPU と一致するもののみ集計
 - GPU 名と VRAM 合計は DXGI (IDXGIFactory1) から取得（失敗時は D3DKMT の LUID→名前対応 + レジストリ DriverDesc から取得）
