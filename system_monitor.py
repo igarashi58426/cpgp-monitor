@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 システムモニター TUI ツール
-4 画面分割で CPU、メモリ、GPU、GPU メモリ使用率を表示
+4 画面分割で CPU、RAM、GPU、VRAM 使用率を表示
 時系列グラフ付き（過去90秒）
 0.5 秒ごとに更新
 """
@@ -334,7 +334,7 @@ def update_layout(layout, history, console=None):
 
     # 右上：メモリ使用率
     memory_panel = Panel(
-        f"[bold magenta]メモリ[/bold magenta] {mem_info.strip()}\n[green]{mem_graph}[/green]",
+        f"[bold magenta]RAM[/bold magenta] {mem_info.strip()}\n[green]{mem_graph}[/green]",
         border_style="yellow"
     )
     layout["right"].update(memory_panel)
@@ -348,7 +348,7 @@ def update_layout(layout, history, console=None):
 
     # 右下：GPU メモリ使用率
     gpu_mem_panel = Panel(
-        f"[bold blue]GPU メモリ[/bold blue] {gpu_mem_info.strip()}\n[green]{gpu_mem_graph}[/green]",
+        f"[bold blue]VRAM[/bold blue] {gpu_mem_info.strip()}\n[green]{gpu_mem_graph}[/green]",
         border_style="magenta"
     )
     layout["bottom_right"].update(gpu_mem_panel)
