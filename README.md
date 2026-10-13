@@ -48,12 +48,19 @@ uv run python system_monitor.py
 
 - `psutil` - システム情報取得用
 - `rich` - TUI レンダリング用
-- `pynvml` / `nvidia-ml-py` - GPU 監視用（NVIDIA GPU の場合）
+- `pynvml` / `nvidia-ml-py` - NVIDIA GPU の温度・使用率取得用
 
 ## 要件
 
-- Python 3.8+
-- NVIDIA GPU（GPU 監視機能を使用する場合）
+- Python 3.12+（pyproject.toml 参照）
+- Windows 10/11（GPU 監視は Windows パフォーマンスカウンタ \GPU Engine / \GPU Process Memory を使用。NVIDIA / AMD / Intel いずれの GPU にも対応）
+
+## GPU 監視の仕組み
+
+- **GPU 名・LUID の特定**: `EnumDisplayDevicesW` + `D3DKMTOpenAdapterFromHdc` でディスプレイに接続されている GPU の LUID と名前を特定
+- **NVIDIA GPU**: NVML（pynvml）。使用率・温度・メモリを取得
+- **その他の GPU（AMD Radeon など）**: NVML が使えない場合、Windows の GPU パフォーマンスカウンタ (PDH) にフォールバック。使用率・VRAM 使用量を取得（温度は非対応）。カウンタの LUID がメイン GPU と一致するもののみ集計
+- GPU 名と VRAM 合計は DXGI (IDXGIFactory1) から取得（失敗時は D3DKMT の LUID→名前対応 + レジストリ DriverDesc から取得）
 
 ## 停止方法
 
