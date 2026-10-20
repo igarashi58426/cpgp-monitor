@@ -27,19 +27,19 @@ uv tool install . --force --reinstall
 ### uv tool run で実行（推奨）
 
 ```bash
-uv tool run system-monitor
+uv tool run cpgp-monitor
 ```
 
 ### 直接インストールされたコマンドで実行
 
 ```bash
-system-monitor
+cpgp-monitor
 ```
 
 ### Python スクリプトとして直接実行
 
 ```bash
-uv run python system_monitor.py
+uv run python cpgp_monitor.py
 ```
 
 ### 依存パッケージ
